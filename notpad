@@ -1,0 +1,4 @@
+MONGODB_URI=mongodb+srv://blackadmin:BlackStore2026!@cluster0.pwqe2go.mongodb.net/blackstore?retryWrites=true&w=majority
+JWT_SECRET=black_store_jwt_secret_2026_!@#change_this
+ADMIN_EMAIL=admin@black.store
+ADMIN_PASSWORD=Admin@2026Black

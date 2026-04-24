@@ -1,0 +1,49 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:#0a0a0a; color:#fff; }
+
+.login-card {
+    max-width:400px; margin:100px auto; padding:40px;
+    background:#111; border:1px solid #222; border-radius:16px; text-align:center;
+}
+.login-card input {
+    width:100%; padding:12px; margin:8px 0;
+    background:#1a1a1a; border:1px solid #333; border-radius:8px; color:#fff;
+}
+.login-card button {
+    width:100%; padding:12px; margin-top:12px;
+    background:#fff; color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer;
+}
+
+nav {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 24px; background:#111; border-bottom:1px solid #222;
+}
+nav button {
+    padding:8px 16px; background:#333; color:#fff; border:none; border-radius:8px; cursor:pointer;
+}
+
+main { padding:24px; max-width:1200px; margin:0 auto; }
+main button {
+    padding:10px 20px; margin:12px 0;
+    background:#fff; color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer;
+}
+
+.product-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px; margin:8px 0; background:#111; border:1px solid #222; border-radius:12px;
+}
+.product-item button {
+    padding:6px 12px; margin:0 4px; font-size:12px;
+}
+
+#productForm {
+    background:#111; padding:24px; border:1px solid #333; border-radius:12px; margin-top:16px;
+}
+#productForm input, #productForm textarea {
+    width:100%; padding:10px; margin:6px 0;
+    background:#1a1a1a; border:1px solid #333; border-radius:8px; color:#fff;
+}
+#productForm textarea { height:80px; }
+#productForm button {
+    margin-right:8px;
+}

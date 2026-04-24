@@ -1,0 +1,18 @@
+{
+  "name": "black-store",
+  "version": "2.0.0",
+  "description": "BLACK Premium E-commerce Store - Full Stack",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "seed": "node server/seeds/seedData.js",
+    "install-all": "npm install && cd server && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["ecommerce", "black", "premium", "store"],
+  "author": "BLACK Store",
+  "license": "MIT"
+}

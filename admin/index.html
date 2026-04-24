@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLACK Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div id="loginScreen">
+        <div class="login-card">
+            <h2>🔐 BLACK Admin</h2>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Mật khẩu" required>
+                <button type="submit">Đăng nhập</button>
+            </form>
+            <p id="loginMsg"></p>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display:none">
+        <nav>
+            <h2>BLACK Admin</h2>
+            <button onclick="logout()">Đăng xuất</button>
+        </nav>
+        <main>
+            <h3>📦 Quản lý sản phẩm</h3>
+            <button onclick="showAddForm()">+ Thêm sản phẩm</button>
+            <div id="productList"></div>
+            
+            <div id="productForm" style="display:none">
+                <h4 id="formTitle">Thêm sản phẩm</h4>
+                <input type="text" id="pName" placeholder="Tên sản phẩm">
+                <input type="text" id="pCategory" placeholder="Danh mục (phone/laptop/audio/watch)">
+                <input type="text" id="pCategoryLabel" placeholder="Nhãn (Điện thoại/Laptop...)">
+                <input type="number" id="pPrice" placeholder="Giá (VNĐ)">
+                <input type="number" id="pOldPrice" placeholder="Giá cũ (nếu có)">
+                <input type="number" id="pStock" placeholder="Số lượng tồn kho">
+                <input type="text" id="pBadge" placeholder="Badge (Mới/Hot/...)">
+                <textarea id="pDesc" placeholder="Mô tả"></textarea>
+                <input type="hidden" id="pId">
+                <button onclick="saveProduct()">Lưu</button>
+                <button onclick="hideForm()">Hủy</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
