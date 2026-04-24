@@ -48,7 +48,7 @@ connectDB()
         const User = require('./models/User');
         const Product = require('./models/Product');
 
-        const adminEmail = || 'admin@black.store';
+        const adminEmail = 'admin@black.store';
         const adminExists = await User.findOne({ email: adminEmail });
 
         if (!adminExists) {
