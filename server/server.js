@@ -48,15 +48,15 @@ connectDB()
         const User = require('./models/User');
         const Product = require('./models/Product');
 
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@black.store';
+        const adminEmail = || 'admin@black.store';
         const adminExists = await User.findOne({ email: adminEmail });
 
         if (!adminExists) {
             console.log('🌱 Creating admin...');
             const admin = await User.create({
-                name: process.env.ADMIN_NAME || 'Admin',
+                name:   'Admin',
                 email: adminEmail,
-                password: process.env.ADMIN_PASSWORD || 'Admin@2026Black',
+                password: 'Admin@2026Black',
                 role: 'admin'
             });
 
