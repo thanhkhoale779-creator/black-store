@@ -1,4 +1,4 @@
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -12,182 +12,140 @@ const productRoutes = require('./routes/products');
 const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orders');
 
-// Khởi tạo Express app
 const app = express();
 
-// ============================================
-// KẾT NỐI DATABASE (MongoDB Atlas - Cloud)
-// ============================================
-connectDB();
-
-// ============================================
-// MIDDLEWARE
-// ============================================
-
-// Bảo mật HTTP headers
-app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-}));
-
-// CORS - Cho phép truy cập từ mọi nguồn
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Nén response để tăng tốc
+// Middleware
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
 app.use(compression());
-
-// Log request
-if (process.env.NODE_ENV === 'production') {
-    app.use(morgan('combined'));
-} else {
-    app.use(morgan('dev'));
-}
-
-// Parse JSON body
+app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// ============================================
-// PHỤC VỤ FILE TĨNH (Frontend)
-// ============================================
+// Phục vụ file tĩnh
+app.use(express.static(path.join(__dirname, '..', 'client')));
+app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
 
-// Client (Website người dùng)
-app.use(express.static(path.join(__dirname, '..', 'client'), {
-    maxAge: '1d',
-    etag: true,
-}));
-
-// Admin Panel
-app.use('/admin', express.static(path.join(__dirname, '..', 'admin'), {
-    maxAge: '1d',
-    etag: true,
-}));
-
-// ============================================
-// API ROUTES
-// ============================================
-
-// Health Check
-app.get('/api/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'BLACK Store API đang hoạt động',
-        version: '2.0.0',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-    });
-});
-
-// API Routes
+// Routes API
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 
-// ============================================
-// FALLBACK ROUTES
-// ============================================
-
-// Admin Panel - Fallback
-app.get('/admin/*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({ success: true, message: 'BLACK Store API running', timestamp: new Date().toISOString() });
 });
 
-// Website - Fallback (cho SPA)
+// Fallback
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
 });
 
-// ============================================
-// ERROR HANDLING
-// ============================================
-
-// 404 Handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route không tồn tại',
-    });
-});
-
-// Global Error Handler
-app.use((err, req, res, next) => {
-    console.error('❌ Server Error:', err.stack);
-
-    // Mongoose validation error
-    if (err.name === 'ValidationError') {
-        const messages = Object.values(err.errors).map((e) => e.message);
-        return res.status(400).json({
-            success: false,
-            message: 'Dữ liệu không hợp lệ',
-            errors: messages,
-        });
-    }
-
-    // Mongoose duplicate key
-    if (err.code === 11000) {
-        return res.status(400).json({
-            success: false,
-            message: 'Dữ liệu đã tồn tại',
-        });
-    }
-
-    // JWT errors
-    if (err.name === 'JsonWebTokenError') {
-        return res.status(401).json({
-            success: false,
-            message: 'Token không hợp lệ',
-        });
-    }
-
-    if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({
-            success: false,
-            message: 'Token đã hết hạn',
-        });
-    }
-
-    // Default error
-    res.status(err.statusCode || 500).json({
-        success: false,
-        message: err.message || 'Lỗi server',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    });
-});
-
-// ============================================
-// KHỞI ĐỘNG SERVER
-// ============================================
-
+// Kết nối database và tự động seed
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-    console.log('┌─────────────────────────────────────────┐');
-    console.log('│         🖤 BLACK STORE SERVER           │');
-    console.log('├─────────────────────────────────────────┤');
-    console.log(`│  🚀 Server:  http://localhost:${PORT}       │`);
-    console.log(`│  📦 API:     http://localhost:${PORT}/api   │`);
-    console.log(`│  👑 Admin:   http://localhost:${PORT}/admin │`);
-    console.log(`│  🌍 Mode:    ${(process.env.NODE_ENV || 'development').padEnd(27)}│`);
-    console.log('└─────────────────────────────────────────┘');
-});
+connectDB()
+    .then(async () => {
+        // Tự động tạo admin nếu chưa có
+        const User = require('./models/User');
+        const Product = require('./models/Product');
 
-// Xử lý tắt server an toàn
-process.on('SIGTERM', () => {
-    console.log('👋 SIGTERM received. Đóng server...');
-    server.close(() => {
-        console.log('✅ Server đã đóng');
-        process.exit(0);
+        const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL || 'admin@black.store' });
+        
+        if (!adminExists) {
+            console.log('🌱 Đang tạo tài khoản admin...');
+            const admin = await User.create({
+                name: process.env.ADMIN_NAME || 'Admin',
+                email: process.env.ADMIN_EMAIL || 'admin@black.store',
+                password: process.env.ADMIN_PASSWORD || 'Admin@2026Black',
+                role: 'admin'
+            });
+
+            // Tạo sản phẩm mẫu
+            console.log('📦 Đang tạo sản phẩm mẫu...');
+            const sampleProducts = [
+                {
+                    name: 'Điện thoại Black Phone X Pro',
+                    category: 'phone',
+                    categoryLabel: 'Điện thoại',
+                    price: 29990000,
+                    oldPrice: 34990000,
+                    description: 'Điện thoại cao cấp với thiết kế nguyên khối, màn hình 6.7 inch AMOLED, chip Snapdragon 8 Gen 4, camera 108MP chụp đêm xuất sắc, pin 5000mAh.',
+                    rating: 4.9,
+                    reviews: 128,
+                    badge: 'Mới',
+                    stockQuantity: 50,
+                    createdBy: admin._id
+                },
+                {
+                    name: 'Laptop Black Book Air 15',
+                    category: 'laptop',
+                    categoryLabel: 'Laptop',
+                    price: 45990000,
+                    oldPrice: 49990000,
+                    description: 'Laptop siêu nhẹ 1.2kg, màn hình 15.6" 4K OLED, pin 20 giờ, chip Intel Core Ultra 9, RAM 32GB.',
+                    rating: 4.8,
+                    reviews: 95,
+                    badge: 'Hot',
+                    stockQuantity: 30,
+                    createdBy: admin._id
+                },
+                {
+                    name: 'Tai nghe Black Pods Pro 2',
+                    category: 'audio',
+                    categoryLabel: 'Âm thanh',
+                    price: 5990000,
+                    oldPrice: 7490000,
+                    description: 'Tai nghe không dây chống ồn chủ động ANC, âm thanh Hi-Res Audio, pin 8 giờ, sạc không dây MagSafe.',
+                    rating: 4.7,
+                    reviews: 256,
+                    badge: null,
+                    stockQuantity: 200,
+                    createdBy: admin._id
+                },
+                {
+                    name: 'Đồng hồ Black Watch Ultra',
+                    category: 'watch',
+                    categoryLabel: 'Đồng hồ',
+                    price: 18990000,
+                    oldPrice: null,
+                    description: 'Đồng hồ thông minh vỏ Titanium, màn hình Sapphire, đo ECG, SpO2, GPS đa băng tần, chống nước 100m.',
+                    rating: 4.9,
+                    reviews: 67,
+                    badge: 'Cao cấp',
+                    stockQuantity: 25,
+                    createdBy: admin._id
+                },
+                {
+                    name: 'Điện thoại Black Phone S',
+                    category: 'phone',
+                    categoryLabel: 'Điện thoại',
+                    price: 21990000,
+                    oldPrice: 24990000,
+                    description: 'Điện thoại nhỏ gọn 6.1 inch, hiệu năng flagship, camera kép 50MP, thiết kế kính & kim loại.',
+                    rating: 4.6,
+                    reviews: 189,
+                    badge: null,
+                    stockQuantity: 75,
+                    createdBy: admin._id
+                }
+            ];
+
+            await Product.insertMany(sampleProducts);
+            console.log(`✅ Đã tạo ${sampleProducts.length} sản phẩm mẫu`);
+        }
+
+        // Khởi động server
+        app.listen(PORT, () => {
+            console.log('┌─────────────────────────────────────────┐');
+            console.log('│         🖤 BLACK STORE SERVER           │');
+            console.log('├─────────────────────────────────────────┤');
+            console.log(`│  🚀 Server:  http://localhost:${PORT}       │`);
+            console.log(`│  👑 Admin:   http://localhost:${PORT}/admin │`);
+            console.log('└─────────────────────────────────────────┘');
+        });
+    })
+    .catch((err) => {
+        console.error('❌ Failed to connect to database:', err.message);
+        process.exit(1);
     });
-});
-
-process.on('unhandledRejection', (err) => {
-    console.error('❌ Unhandled Rejection:', err);
-    server.close(() => process.exit(1));
-});
-
-module.exports = app;
