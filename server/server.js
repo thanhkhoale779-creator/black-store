@@ -18,7 +18,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Phục vụ file tĩnh
-app.use('/', express.static(path.join(__dirname, '..', 'client')));
+app.use(express.static(path.join(__dirname, '..', 'client')));
 app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
 
 // Routes API
